@@ -13,6 +13,16 @@
 <body>
     <div id="app">
         <div class="container">
+            <a href="index.html">กลับ</a>
+            <div class="row">
+                <h2>ออกใบเสร็จรับเงิน</h2>
+            </div>
+            <div class="col-md-auto">
+                <span>วันที่</span><br>
+                <input id="date" type="text" disabled><br>
+                <span>เลขที่เอกสาร</span><br>
+                <input id="receiptCode" type="text" disabled value="TXXXX"><br>
+            </div><br>
             <div>
                 <div class="row d-flex justify-content-center">
                     <div class="col-md-auto">
@@ -127,11 +137,17 @@
         integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
         crossorigin="anonymous"></script>
     <script type="module">
+        import { addReceipt } from "./receipt.js"
         import { getProducts } from "./product.js"
         import { getUnitById, getUnits } from "./unit.js"
+        var n = new Date();
+        var y = n.getFullYear();
+        var m = n.getMonth() + 1;
+        var d = n.getDate();
+        document.getElementById("date").value = d + "/" + m + "/" + y
         const units = await getUnits()
         var table = document.getElementById("tableCart");
-        document.getElementById("createreceipt").addEventListener("click", () => {
+        document.getElementById("createreceipt").addEventListener("click", async () => {
             for (var i = 0; i < document.getElementById("tableBody").rows.length; i++) {
                 var row = document.getElementById("tableBody").rows[i]
                 const product = products.find((product) => {
@@ -144,26 +160,17 @@
                     total: row.querySelector(".total").innerText,
                     productId: product.pid
                 }
-
-
-
-
-                // console.log(product.pid)
-                // console.log( "amount " + row.querySelector(".amount").value)
-                // console.log("perdiscount " + row.querySelector(".perdiscount").value)
-                // console.log("bahtdiscount " + row.querySelector(".bahtdiscount").innerText)
-                // console.log("total " + row.querySelector(".total").innerText)
-
             }
             const receipt = {
+                receiptCode: document.getElementById("receiptCode").value,
                 totalnodiscount: document.getElementById("totalnodiscount").value,
                 totaldiscount: document.getElementById("totaldiscount").value,
                 subtotal: document.getElementById("subtotal").value,
                 tradediscount: document.getElementById("tradediscount").value,
                 grandtotal: document.getElementById("grandtotal").value
             }
-            console.log(receipt)
-            console.log(cart)
+            await addReceipt(receipt.totalnodiscount, receipt.totaldiscount, receipt.subtotal, receipt.tradediscount, receipt.grandtotal, cart)
+            window.location.reload()
         })
         document.getElementById("saveBtn").addEventListener("click", () => {
             if (selectedProduct !== -1) {
@@ -203,6 +210,7 @@
 
 
         function loadProduct() {
+            selectedProduct = -1
             document.getElementById("trId").value = -1
             const modalBody = document.querySelector(".modal-body")
             modalBody.innerHTML = "";
