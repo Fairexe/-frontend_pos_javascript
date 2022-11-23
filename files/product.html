@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css"
+        integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+</head>
+
+<body>
+    <div id="app">
+        <div class="container">
+            <div class="row">
+                <div class="col">
+                    <button id="addBtn" type="button" class="btn btn-primary" data-toggle="modal"
+                        data-target="#exampleModal">
+                        เพิ่ม
+                    </button>
+                    <div id="table" class="center">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Modal -->
+    <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">เพิ่มสินค้า</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <input class="form-control" type="hidden" name="" id="id">
+                        <div class="col">
+                            <span>รหัสสินค้า</span>
+                            <input class="form-control" type="text" name="" id="product_Code">
+                        </div>
+                        <div class="col">
+                            <span>ชื่อสินค้า</span>
+                            <input class="form-control" type="text" name="" id="product_Name">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            <span>ราคา</span>
+                            <input class="form-control" type="number" name="" id="product_Price">
+                        </div>
+                        <div class="col">
+                            <span>หน่วย</span><br>
+                            <select id="unit">
+
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="saveBtn" data-dismiss="modal">Save
+                        changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+        integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js"
+        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js"
+        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+        crossorigin="anonymous"></script>
+    <script type="module">
+        import { getProducts, addProduct, RemoveProduct, updateProduct } from "./product.js"
+        import { getUnitById, getUnits } from "./unit.js"
+        const units = await getUnits()
+        await loadtable()
+        setupUnits()
+        document.getElementById("addBtn").addEventListener("click", () => {
+            document.getElementById("unit").selectedIndex = -1
+            document.getElementById("id").value = -1
+            document.getElementById("product_Code").disabled = false;
+            document.getElementById("product_Code").value = ""
+            document.getElementById("product_Name").value = ""
+            document.getElementById("product_Price").value = 0
+        })
+        document.getElementById("saveBtn").addEventListener("click", async () => {
+            var id = document.getElementById("id").value
+            var code = document.getElementById("product_Code").value
+            var name = document.getElementById("product_Name").value
+            var price = document.getElementById("product_Price").value
+            var unitId = document.getElementById("unit").value
+            if (id >= 0) {
+                await updateProduct(id, code, name, price, unitId)
+            } else {
+                await addProduct(code, name, price, unitId)
+            }
+            await loadtable()
+        })
+
+        function setupUnits() {
+            const dropdown = document.getElementById("unit")
+            var html = ""
+            dropdown.innerHTML = ""
+            for (var i = 0; i < units.length; i++) {
+                var el = document.createElement("option")
+                el.innerText = units[i].unitName
+                el.value = units[i].uid
+                dropdown.appendChild(el)
+            }
+        }
+
+        async function loadtable() {
+            var table = document.getElementById("table")
+            table.innerHTML = ""
+            var result = await getProducts()
+            var html = "<table id='intable' class='table text-center border'>"
+            html += "<tr><td>No</td><td>รหัสสินค้า</td><td>ชื่อสินค้า</td><td>หน่วย</td><td>ราคา</td><td>ดำเนินการ</td></tr>"
+            html += "</table>"
+            table.innerHTML = html
+            for (var i = 0; i < result.length; i++) {
+                const unit = units.find((unit) => {
+                    return unit.uid == result[i].unitId
+                })
+                const id = result[i].pid
+                const code = result[i].productCode
+                const name = result[i].productName
+                const unitName = unit.unitName
+                const unitId = result[i].unitId
+                const price = result[i].productPrice
+                const tr = document.createElement("tr")
+                let trhtml = ""
+                trhtml += "<td>" + (1 + i) + "</td>"
+                trhtml += "<td>" + result[i].productCode + "</td>"
+                trhtml += "<td>" + result[i].productName + "</td>"
+                trhtml += "<td>" + unit.unitName + "</td>"
+                trhtml += "<td>" + result[i].productPrice + "</td>"
+                trhtml += "<td class='button'></td>"
+                tr.innerHTML = trhtml
+                const editBtn = document.createElement("button")
+                editBtn.type = "button"
+                editBtn.classList.add("btn")
+                editBtn.classList.add("btn-primary")
+                editBtn.dataset.toggle = "modal"
+                editBtn.dataset.target = "#exampleModal"
+                editBtn.innerText = "แก้ไข"
+                editBtn.addEventListener("click", () => {
+                    edit(id, code, name, price, unitId)
+                })
+                tr.querySelector(".button").appendChild(editBtn)
+                const removeBtn = document.createElement("button")
+                removeBtn.type = "button"
+                removeBtn.classList.add("btn")
+                removeBtn.classList.add("btn-danger")
+                removeBtn.innerText = "ลบ"
+                removeBtn.addEventListener("click", async () => {
+                    await removeUnit(id)
+                    loadtable()
+                })
+                tr.querySelector(".button").appendChild(removeBtn)
+                document.getElementById("intable").appendChild(tr)
+            }
+        }
+
+        async function edit(id, code, name, price, unitId) {
+            document.getElementById("id").value = id
+            document.getElementById("product_Code").disabled = true;
+            document.getElementById("product_Code").value = code
+            document.getElementById("product_Name").value = name
+            document.getElementById("product_Price").value = price
+            const find = units.findIndex((unit) => {
+                return unit.uid == unitId
+            })
+            document.getElementById("unit").selectedIndex = find
+        }
+
+        async function removeUnit(id) {
+            await RemoveProduct(id)
+            await loadtable()
+        }
+    </script>
+</body>
+
+</html>

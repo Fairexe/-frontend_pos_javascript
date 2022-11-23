@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pos</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css"
+        integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+</head>
+
+<body>
+    <div id="app">
+        <div class="container">
+            <div>
+                <div class="row d-flex justify-content-center">
+                    <div class="col-md-auto">
+                        <table id="tableCart" class="table">
+                            <thead>
+                                <tr>
+                                    <th scope="col">No.</th>
+                                    <th scope="col">รหัสสินค้า</th>
+                                    <th scope="col">ชื่อสินค้า</th>
+                                    <th scope="col">หน่วย</th>
+                                    <th scope="col">จำนวน</th>
+                                    <th scope="col">ราคา</th>
+                                    <th scope="col">ส่วนลด (%)</th>
+                                    <th scope="col">ส่วนลด (บาท)</th>
+                                    <th scope="col">รวมเงิน</th>
+                                    <th scope="col">ดำเนินการ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBody" class="body">
+
+                            </tbody>
+                            <tbody>
+                                <tr class="footer">
+
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="d-flex align-items-end flex-column">
+                    <div class="row">
+                        <span>ยอดรวมสินค้าก่อนส่วนลด&nbsp;</span>
+                        <input id="totalnodiscount" type="number" min="0" value="0" disabled>
+                    </div>
+                    <div class="row">
+                        <span>ยอดรวมส่วนลดสินค้า&nbsp;</span>
+                        <input id="totaldiscount" type="number" min="0" value="0" disabled>
+                    </div>
+
+                    <div class="row">
+                        <span>Subtotal&nbsp;</span>
+                        <input id="subtotal" type="number" min="0" value="0" disabled>
+                    </div>
+                    <div class="row">
+                        <span>ส่วนลดการค้า&nbsp;</span>
+                        <input id="tradediscount" type="number" min="0" value="0">
+                    </div>
+                    <div class="row">
+                        <span>Grand total&nbsp;</span>
+                        <input id="grandtotal" type="number" min="0" value="0" disabled>
+                    </div>
+                    <br>
+                    <div class="row">
+                        <button id="createreceipt" class="btn btn-primary">บันทึก</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Modal -->
+    <div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel"
+        data-backdrop="false" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editModalLabel">เลือกสินค้า</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+
+                </div>
+
+                <div class="modal-footer">
+                    <input id="trId" type="number" disabled>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="saveBtn">select this item(add)</button>
+                    <button type="button" class="btn btn-primary" id="updateBtn" hidden>select this
+                        item(update)</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+        integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js"
+        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js"
+        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+        crossorigin="anonymous"></script>
+    <script type="module">
+        import { getProducts } from "./product.js"
+        import { getUnitById, getUnits } from "./unit.js"
+        const units = await getUnits()
+        var table = document.getElementById("tableCart");
+        document.getElementById("createreceipt").addEventListener("click", () => {
+            for (var i = 0; i < document.getElementById("tableBody").rows.length; i++) {
+                var row = document.getElementById("tableBody").rows[i]
+                const product = products.find((product) => {
+                    return product.productName === row.querySelector(".name").innerText
+                })
+                cart[i] = {
+                    amount: row.querySelector(".amount").value,
+                    perDiscount: row.querySelector(".perdiscount").value,
+                    bahtDiscount: row.querySelector(".bahtdiscount").innerText,
+                    total: row.querySelector(".total").innerText,
+                    productId: product.pid
+                }
+
+
+
+
+                // console.log(product.pid)
+                // console.log( "amount " + row.querySelector(".amount").value)
+                // console.log("perdiscount " + row.querySelector(".perdiscount").value)
+                // console.log("bahtdiscount " + row.querySelector(".bahtdiscount").innerText)
+                // console.log("total " + row.querySelector(".total").innerText)
+
+            }
+            const receipt = {
+                totalnodiscount: document.getElementById("totalnodiscount").value,
+                totaldiscount: document.getElementById("totaldiscount").value,
+                subtotal: document.getElementById("subtotal").value,
+                tradediscount: document.getElementById("tradediscount").value,
+                grandtotal: document.getElementById("grandtotal").value
+            }
+            console.log(receipt)
+            console.log(cart)
+        })
+        document.getElementById("saveBtn").addEventListener("click", () => {
+            if (selectedProduct !== -1) {
+                body(selectedProduct)
+                $('#editModal').modal('hide')
+            }
+        })
+        document.getElementById("updateBtn").addEventListener("click", () => {
+            const unit = units.find((unit) => {
+                return unit.uid == selectedProduct.unitId
+            })
+            var index = document.getElementById("trId").value
+            var trrow = document.getElementById("tableBody").rows[index]
+            trrow.querySelector(".code").innerText = selectedProduct.productCode
+            trrow.querySelector(".name").innerText = selectedProduct.productName
+            trrow.querySelector(".unit").innerText = unit.unitName
+            trrow.querySelector(".amount").value = 0
+            trrow.querySelector(".price").innerText = selectedProduct.productPrice
+            trrow.querySelector(".perdiscount").value = 0
+
+            var evt = document.createEvent("HTMLEvents")
+            evt.initEvent("change", true);
+            trrow.querySelector(".perdiscount").dispatchEvent(evt)
+
+            $('#editModal').modal('hide')
+        })
+        document.getElementById("tradediscount").addEventListener("change", () => {
+            document.getElementById("grandtotal").value = (+document.getElementById("subtotal").value) - (+document.getElementById("tradediscount").value)
+        })
+        document.getElementById("tradediscount").addEventListener("keyup", () => {
+            document.getElementById("grandtotal").value = (+document.getElementById("subtotal").value) - (+document.getElementById("tradediscount").value)
+        })
+        const products = await getProducts()
+        const cart = []
+        var selectedProduct = -1;
+        footer()
+
+
+        function loadProduct() {
+            document.getElementById("trId").value = -1
+            const modalBody = document.querySelector(".modal-body")
+            modalBody.innerHTML = "";
+            removeTextPrimary();
+            const div = document.createElement("div")
+            const hr = document.createElement("hr")
+            const ul = document.createElement("ul")
+            for (var i = 0; i < products.length; i++) {
+                const li = document.createElement("li")
+                const product = products[i]
+                li.innerText = products[i].productName
+                li.addEventListener("click", () => {
+                    selectProduct(li, product)
+                })
+                ul.appendChild(li)
+                modalBody.appendChild(ul)
+            }
+            modalBody.appendChild(hr)
+            div.innerText = "No Item Selected"
+            div.classList.add("detail")
+            modalBody.appendChild(div)
+        }
+
+        function selectProduct(li, product) {
+            selectedProduct = product
+            var html = ""
+            removeTextPrimary()
+            li.classList.add("text-primary")
+            const detail = document.querySelector(".detail")
+            html += "<h3>Item detail</h3><b>รหัสสินค้า</b><br>" + product.productCode
+            html += "<br><br><b>ชื่อสินค้า</b><br>" + product.productName
+            html += "<br><br><b>ราคา</b><br>" + product.productPrice
+            detail.innerHTML = html
+        }
+
+        function removeTextPrimary() {
+            const lis = document.querySelectorAll("li")
+            lis.forEach(li => {
+                li.classList.remove("text-primary")
+            })
+        }
+
+        async function body(product) {
+            // const unit = await getUnitById(product.unitId)
+            const unit = units.find((unit) => {
+                return unit.uid == product.unitId
+            })
+            let lasttotal = 0
+            let lasttotaldiscount = 0
+            const tbody = document.querySelector(".body")
+            const trbody = document.createElement("tr")
+            const tdid = document.createElement("td")
+            tdid.classList.add("no")
+            tdid.id = "no"
+            const tdcode = document.createElement("td")
+            const button = document.createElement("button")
+            const tdname = document.createElement("td")
+            const tdunit = document.createElement("td")
+            const tdamount = document.createElement("td")
+            const inputamount = document.createElement("input")
+            const price = document.createElement("td")
+            const tdperdiscount = document.createElement("td")
+            const perdiscount = document.createElement("input")
+            const tdbahtdiscount = document.createElement("td")
+            const total = document.createElement("td")
+            const tdremove = document.createElement("td")
+            const removeBtn = document.createElement("button")
+            tdbahtdiscount.value = 0
+            total.value = 0
+            const rows = document.getElementById("tableBody").rows.length;
+            tdid.innerText = (+rows + 1)
+            trbody.appendChild(tdid)
+            button.id = "code"
+            button.type = "button"
+            button.classList.add("code")
+            button.classList.add("btn")
+            button.classList.add("btn-primary")
+            button.dataset.toggle = "modal"
+            button.dataset.target = "#editModal"
+            button.addEventListener("click", () => {
+                document.getElementById("trId").value = trbody.rowIndex - 1
+                document.getElementById("saveBtn").hidden = true
+                document.getElementById("updateBtn").hidden = false
+                const lis = document.querySelectorAll("li")
+                lis.forEach(li => {
+                    if (li.innerText === tdname.innerText) {
+                        selectProduct(li, product)
+                        return
+                    }
+                })
+            })
+            button.innerText = product.productCode
+            tdcode.appendChild(button)
+            trbody.appendChild(tdcode)
+            tdname.innerText = product.productName
+            trbody.appendChild(tdname)
+            tdname.classList.add("name")
+            tdunit.innerText = unit.unitName
+            tdunit.classList.add("unit")
+            trbody.appendChild(tdunit)
+            inputamount.classList.add("amount")
+            inputamount.type = "number"
+            inputamount.value = 0
+            inputamount.min = 0
+            inputamount.addEventListener("keyup", () => {
+                cal()
+            })
+            inputamount.addEventListener("change", () => {
+                cal()
+            })
+            tdamount.appendChild(inputamount)
+            trbody.appendChild(tdamount)
+            price.classList.add("price")
+            price.innerText = product.productPrice
+            trbody.appendChild(price)
+            perdiscount.classList.add("perdiscount")
+            perdiscount.type = "number"
+            perdiscount.value = 0
+            perdiscount.min = 0
+            perdiscount.addEventListener("keyup", () => {
+                cal()
+            })
+            perdiscount.addEventListener("change", () => {
+                cal()
+            })
+            tdperdiscount.appendChild(perdiscount)
+            trbody.appendChild(tdperdiscount)
+            total.classList.add("total")
+            total.innerText = 0
+            tdbahtdiscount.classList.add("bahtdiscount")
+            tdbahtdiscount.innerText = 0
+            trbody.appendChild(tdbahtdiscount)
+            trbody.appendChild(total)
+            removeBtn.addEventListener("click", () => {
+                var totalnodiscount = document.getElementById("totalnodiscount").value
+                //totalnodiscount
+                document.getElementById("totalnodiscount").value = (totalnodiscount - (inputamount.value * (+price.innerText))).toFixed(2)
+
+                //totaldiscount
+                var rowtotaldiscount = tdbahtdiscount.value
+                document.getElementById("totaldiscount").value = ((+document.getElementById("totaldiscount").value) - (+rowtotaldiscount)).toFixed(2)
+                lasttotaldiscount = tdbahtdiscount.value
+
+                //suntotal
+                document.getElementById("subtotal").value = (+document.getElementById("totalnodiscount").value) - (+document.getElementById("totaldiscount").value)
+
+                //grandtotal
+                document.getElementById("grandtotal").value = (+document.getElementById("subtotal").value) - (+document.getElementById("tradediscount").value)
+
+                var tablebodylenght = document.getElementById("tableBody").rows.length
+                var index = (+trbody.rowIndex) - 1
+                // const tableBody0 = document.getElementById("tableBody").rows[index]
+                for (var i = index + 1; i < tablebodylenght; i++) {
+                    (document.getElementById("tableBody").rows[i]).querySelector(".no").innerText = i
+                }
+
+                if (document.getElementById("tableBody").rows.length === 1 || +totalnodiscount === 0) {
+
+                    //totalnodiscount
+                    document.getElementById("totalnodiscount").value = 0
+
+                    //totaldiscount
+                    var rowtotaldiscount = tdbahtdiscount.value
+                    document.getElementById("totaldiscount").value = 0
+                    lasttotaldiscount = tdbahtdiscount.value
+
+                    //suntotal
+                    document.getElementById("subtotal").value = 0
+
+                    //grandtotal
+                    document.getElementById("grandtotal").value = 0
+                }
+
+                deleteRow(removeBtn)
+                document.querySelector(".footerid").innerText = (+document.getElementById("tableBody").rows.length) + 1
+            })
+            removeBtn.classList = "remove btn btn-danger"
+            removeBtn.innerText = "ลบ"
+            tdremove.appendChild(removeBtn)
+            trbody.appendChild(tdremove)
+
+            function cal() {
+                total.innerText = ((inputamount.value * (+price.innerText)) - (((inputamount.value * (+price.innerText)) * perdiscount.value) / 100)).toFixed(2)
+                total.value = ((inputamount.value * (+price.innerText)) - (((inputamount.value * (+price.innerText)) * perdiscount.value) / 100)).toFixed(2)
+                tdbahtdiscount.innerText = (((inputamount.value * (+price.innerText)) * perdiscount.value) / 100).toFixed(2)
+                tdbahtdiscount.value = (((inputamount.value * (+price.innerText)) * perdiscount.value) / 100).toFixed(2)
+                var rowtotal = (inputamount.value * (+price.innerText))
+                var totalnodiscount = document.getElementById("totalnodiscount").value
+                var sum = (+rowtotal) + (+totalnodiscount) - (+lasttotal)
+                lasttotal = (inputamount.value * (+price.innerText))
+                document.getElementById("totalnodiscount").value = sum.toFixed(2)
+                if (document.getElementById("totalnodiscount").value == 0) {
+                    document.getElementById("totalnodiscount").value = 0
+                }
+
+                //totaldiscount
+                var rowtotaldiscount = tdbahtdiscount.value
+                document.getElementById("totaldiscount").value = ((+document.getElementById("totaldiscount").value) + (+rowtotaldiscount) - (+lasttotaldiscount)).toFixed(2)
+                if (document.getElementById("totaldiscount").value == 0) {
+                    document.getElementById("totaldiscount").value = 0
+                }
+                lasttotaldiscount = tdbahtdiscount.value
+
+                //suntotal
+                document.getElementById("subtotal").value = ((+document.getElementById("totalnodiscount").value) - (+document.getElementById("totaldiscount").value)).toFixed(2)
+                if (document.getElementById("subtotal").value == 0) {
+                    document.getElementById("subtotal").value = 0
+                }
+
+                //grandtotal
+                document.getElementById("grandtotal").value = ((+document.getElementById("subtotal").value) - (+document.getElementById("tradediscount").value)).toFixed(2)
+                if (document.getElementById("grandtotal").value == 0) {
+                    document.getElementById("grandtotal").value = 0
+                }
+            }
+            tbody.appendChild(trbody)
+            document.querySelector(".footerid").innerText = (+document.getElementById("tableBody").rows.length) + 1
+            selectedProduct = -1
+
+        }
+
+        function deleteRow(btn) {
+            var row = btn.parentNode.parentNode;
+            row.parentNode.removeChild(row);
+        }
+
+        function footer() {
+            const tr = document.querySelector(".footer")
+            const td = document.createElement("td")
+            const tdid = document.createElement("td")
+            const tdcode = document.createElement("td")
+            const tdname = document.createElement("td")
+            const tdamount = document.createElement("td")
+            const amount = document.createElement("input")
+            const button = document.createElement("button")
+            const tdprice = document.createElement("td")
+            const tdperdiscount = document.createElement("td")
+            const perdiscount = document.createElement("input")
+            const tdbahtdiscount = document.createElement("td")
+            const bahtdiscount = document.createElement("input")
+            const tdtotal = document.createElement("td")
+            const tdop = document.createElement("td")
+            const opbutton = document.createElement("button")
+            tdid.classList.add("footerid")
+            tdid.innerText = 1
+            tr.appendChild(tdid)
+            button.type = "button"
+            button.classList.add("btn")
+            button.classList.add("btn-primary")
+            button.dataset.toggle = "modal"
+            button.dataset.target = "#editModal"
+            button.innerText = "เลือกสินค้า"
+            button.addEventListener("click", async () => {
+                document.getElementById("saveBtn").hidden = false
+                document.getElementById("updateBtn").hidden = true
+                await loadProduct()
+            })
+            td.appendChild(button)
+            tr.appendChild(td)
+            tdcode.innerText = "-"
+            tr.appendChild(tdcode)
+            tdname.innerText = "-"
+            tr.appendChild(tdname)
+            amount.disabled = true
+            amount.type = "number"
+            amount.value = 0
+            tdamount.appendChild(amount)
+            tr.appendChild(tdamount)
+            tdprice.innerText = 0
+            tr.appendChild(tdprice)
+            perdiscount.disabled = true
+            perdiscount.type = "number"
+            perdiscount.value = 0
+            tdperdiscount.appendChild(perdiscount)
+            tr.appendChild(tdperdiscount)
+            bahtdiscount.disabled = true
+            bahtdiscount.value = 0
+            tdbahtdiscount.appendChild(bahtdiscount)
+            tr.appendChild(tdbahtdiscount)
+            tdtotal.innerText = 0
+            tr.appendChild(tdtotal)
+            opbutton.disabled = true
+            opbutton.innerText = "ลบ"
+            opbutton.classList = "remove btn btn-danger"
+            tdop.appendChild(opbutton)
+            tr.appendChild(tdop)
+        }
+
+
+    </script>
+</body>
+
+</html>
