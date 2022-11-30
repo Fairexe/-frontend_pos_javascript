@@ -17,17 +17,26 @@
             <div class="row">
                 <h2>ดูใบเสร็จรับเงิน</h2>
             </div>
+            <div class="row">
+                <div class="col">
+                    <span>วันที่เรื่มต้น</span>
+                    <input type="date" id="startDate" name="startDate">
+                    <span>วันที่สิ้นสุด</span>
+                    <input type="date" id="endDate" name="endDate">
+                    <button id="search" type="button" class="btn btn-success">ค้นหา</button>
+                </div>
+            </div>
             <div>
                 <div class="row d-flex justify-content-center">
-                    <div class="col-md-auto">
+                    <div class="col">
                         <table id="tableCart" class="table">
                             <thead>
                                 <tr>
-                                    <th scope="col">No.</th>
-                                    <th scope="col">เลขที่เอกสาร</th>
-                                    <th scope="col">วันที่</th>
-                                    <th scope="col">Grand Total</th>
-                                    <th scope="col">ดำเนินการ</th>
+                                    <th scope="col-md-3">No.</th>
+                                    <th scope="col-md-3">เลขที่เอกสาร</th>
+                                    <th scope="col-md-3">วันที่</th>
+                                    <th scope="col-md-3">Grand Total</th>
+                                    <th scope="col-md-3">ดำเนินการ</th>
                                 </tr>
                             </thead>
                             <tbody id="tableBody" class="body">
@@ -50,15 +59,21 @@
         integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
         crossorigin="anonymous"></script>
     <script type="module">
-        import { getReceipts } from "./receipt.js"
-        var receipts = await getReceipts()
+        import { getReceipts, getReceiptByDate } from "./receipt.js"
+        var receipts = (await getReceipts()).data
         await loadtable()
+        document.getElementById("search").addEventListener("click", async () => {
+            console.log(document.getElementById("startDate").value)
+            console.log(document.getElementById("endDate").value)
+            receipts = (await getReceiptByDate(document.getElementById("startDate").value, document.getElementById("endDate").value)).data
+            loadtable()
+        })
 
         function loadtable() {
             const table = document.getElementById("tableBody")
-            console.log(table)
+            table.innerHTML = ""
             for (var i = 0; i < receipts.length; i++) {
-                
+                const index = i
                 const tr = document.createElement("tr")
                 const tdno = document.createElement("td")
                 const tdcode = document.createElement("td")
@@ -71,6 +86,11 @@
                 tddate.innerText = receipts[i].createDate
                 tdtotal.innerText = receipts[i].grandTotal
                 button.innerText = "ดูรายละเอียด"
+                button.classList.add("btn")
+                button.classList.add("btn-primary")
+                button.addEventListener("click", () => {
+                    location.href="receiptdetail.html?id=" + receipts[index].receiptId
+                })
                 tdview.appendChild(button)
                 tr.appendChild(tdno)
                 tr.appendChild(tdcode)

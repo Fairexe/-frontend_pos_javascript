@@ -83,6 +83,7 @@
         </div>
     </div>
     <!-- Modal -->
+    <div id="modal-select-item"></div>
     <div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel"
         data-backdrop="false" aria-hidden="true">
         <div class="modal-dialog" role="document">
@@ -98,7 +99,7 @@
                 </div>
 
                 <div class="modal-footer">
-                    <input id="trId" type="number" disabled>
+                    <input id="trId" type="number" disabled hidden>
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                     <button type="button" class="btn btn-primary" id="saveBtn">select this item(add)</button>
                     <button type="button" class="btn btn-primary" id="updateBtn" hidden>select this
@@ -107,26 +108,6 @@
             </div>
         </div>
     </div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
         integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
         crossorigin="anonymous"></script>
@@ -140,14 +121,28 @@
         import { addReceipt } from "./receipt.js"
         import { getProducts } from "./product.js"
         import { getUnitById, getUnits } from "./unit.js"
+        import { createSelectItemModal } from "./selectItem.js"
+        const products = (await getProducts()).data
+        const modal = createSelectItemModal(document.getElementById('modal-select-item'), products)
+        modal.eventTarget.addEventListener('select', (e) => {
+            if (selectedItemRow >= 0) {
+                updateProductRow(products[e.detail])
+            } else {
+                addProductRow(products[e.detail])
+            }
+        })
+        var selectedItemRow = -1;
+        var trId = -1;
         var n = new Date();
         var y = n.getFullYear();
         var m = n.getMonth() + 1;
         var d = n.getDate();
         document.getElementById("date").value = d + "/" + m + "/" + y
-        const units = await getUnits()
+        const res = await getUnits()
+        const units = res.data
         var table = document.getElementById("tableCart");
         document.getElementById("createreceipt").addEventListener("click", async () => {
+            const cart = []
             for (var i = 0; i < document.getElementById("tableBody").rows.length; i++) {
                 var row = document.getElementById("tableBody").rows[i]
                 const product = products.find((product) => {
@@ -155,8 +150,8 @@
                 })
                 cart[i] = {
                     amount: row.querySelector(".amount").value,
-                    perDiscount: row.querySelector(".perdiscount").value,
-                    bahtDiscount: row.querySelector(".bahtdiscount").innerText,
+                    discountPercent: row.querySelector(".perdiscount").value,
+                    discountTotal: row.querySelector(".bahtdiscount").innerText,
                     total: row.querySelector(".total").innerText,
                     productId: product.pid
                 }
@@ -169,99 +164,44 @@
                 tradediscount: document.getElementById("tradediscount").value,
                 grandtotal: document.getElementById("grandtotal").value
             }
-            await addReceipt(receipt.totalnodiscount, receipt.totaldiscount, receipt.subtotal, receipt.tradediscount, receipt.grandtotal, cart)
-            window.location.reload()
-        })
-        document.getElementById("saveBtn").addEventListener("click", () => {
-            if (selectedProduct !== -1) {
-                body(selectedProduct)
-                $('#editModal').modal('hide')
+            var res = await addReceipt(receipt.totalnodiscount, receipt.totaldiscount, receipt.subtotal, receipt.tradediscount, receipt.grandtotal, cart)
+            if(res.statusCode == 1){
+                alert(res.message)
+            }else{
+                window.location.reload
             }
         })
-        document.getElementById("updateBtn").addEventListener("click", () => {
+        footer()
+
+        function updateProductRow(product) {
             const unit = units.find((unit) => {
-                return unit.uid == selectedProduct.unitId
+                return unit.Uid == product.UnitId
             })
-            var index = document.getElementById("trId").value
-            var trrow = document.getElementById("tableBody").rows[index]
-            trrow.querySelector(".code").innerText = selectedProduct.productCode
-            trrow.querySelector(".name").innerText = selectedProduct.productName
+            var trrow = document.getElementById("tableBody").rows[trId]
+            trrow.dataset.productId = product.pid
+            trrow.querySelector(".code").innerText = product.productCode
+            trrow.querySelector(".name").innerText = product.productName
             trrow.querySelector(".unit").innerText = unit.unitName
             trrow.querySelector(".amount").value = 0
-            trrow.querySelector(".price").innerText = selectedProduct.productPrice
+            trrow.querySelector(".price").innerText = product.productPrice
             trrow.querySelector(".perdiscount").value = 0
 
             var evt = document.createEvent("HTMLEvents")
             evt.initEvent("change", true);
             trrow.querySelector(".perdiscount").dispatchEvent(evt)
-
-            $('#editModal').modal('hide')
-        })
-        document.getElementById("tradediscount").addEventListener("change", () => {
-            document.getElementById("grandtotal").value = (+document.getElementById("subtotal").value) - (+document.getElementById("tradediscount").value)
-        })
-        document.getElementById("tradediscount").addEventListener("keyup", () => {
-            document.getElementById("grandtotal").value = (+document.getElementById("subtotal").value) - (+document.getElementById("tradediscount").value)
-        })
-        const products = await getProducts()
-        const cart = []
-        var selectedProduct = -1;
-        footer()
-
-
-        function loadProduct() {
-            selectedProduct = -1
-            document.getElementById("trId").value = -1
-            const modalBody = document.querySelector(".modal-body")
-            modalBody.innerHTML = "";
-            removeTextPrimary();
-            const div = document.createElement("div")
-            const hr = document.createElement("hr")
-            const ul = document.createElement("ul")
-            for (var i = 0; i < products.length; i++) {
-                const li = document.createElement("li")
-                const product = products[i]
-                li.innerText = products[i].productName
-                li.addEventListener("click", () => {
-                    selectProduct(li, product)
-                })
-                ul.appendChild(li)
-                modalBody.appendChild(ul)
-            }
-            modalBody.appendChild(hr)
-            div.innerText = "No Item Selected"
-            div.classList.add("detail")
-            modalBody.appendChild(div)
         }
 
-        function selectProduct(li, product) {
-            selectedProduct = product
-            var html = ""
-            removeTextPrimary()
-            li.classList.add("text-primary")
-            const detail = document.querySelector(".detail")
-            html += "<h3>Item detail</h3><b>รหัสสินค้า</b><br>" + product.productCode
-            html += "<br><br><b>ชื่อสินค้า</b><br>" + product.productName
-            html += "<br><br><b>ราคา</b><br>" + product.productPrice
-            detail.innerHTML = html
-        }
-
-        function removeTextPrimary() {
-            const lis = document.querySelectorAll("li")
-            lis.forEach(li => {
-                li.classList.remove("text-primary")
-            })
-        }
-
-        async function body(product) {
-            // const unit = await getUnitById(product.unitId)
+        async function addProductRow(product) {
             const unit = units.find((unit) => {
-                return unit.uid == product.unitId
+                return unit.Uid == product.UnitId
             })
+
             let lasttotal = 0
             let lasttotaldiscount = 0
             const tbody = document.querySelector(".body")
             const trbody = document.createElement("tr")
+            trbody.dataset.productId = product.pid
+
             const tdid = document.createElement("td")
             tdid.classList.add("no")
             tdid.id = "no"
@@ -288,21 +228,15 @@
             button.classList.add("code")
             button.classList.add("btn")
             button.classList.add("btn-primary")
-            button.dataset.toggle = "modal"
-            button.dataset.target = "#editModal"
-            button.addEventListener("click", () => {
-                document.getElementById("trId").value = trbody.rowIndex - 1
-                document.getElementById("saveBtn").hidden = true
-                document.getElementById("updateBtn").hidden = false
-                const lis = document.querySelectorAll("li")
-                lis.forEach(li => {
-                    if (li.innerText === tdname.innerText) {
-                        selectProduct(li, product)
-                        return
-                    }
-                })
-            })
             button.innerText = product.productCode
+            button.addEventListener("click", () => {
+                var productIndex = products.findIndex((p) => {
+                    return p.pid === +trbody.dataset.productId
+                })
+                trId = trbody.rowIndex - 1
+                selectedItemRow = trbody.rowIndex
+                modal.show(productIndex)
+            })
             tdcode.appendChild(button)
             trbody.appendChild(tdcode)
             tdname.innerText = product.productName
@@ -428,7 +362,7 @@
             }
             tbody.appendChild(trbody)
             document.querySelector(".footerid").innerText = (+document.getElementById("tableBody").rows.length) + 1
-            selectedProduct = -1
+            // selectedProduct = -1
 
         }
 
@@ -460,13 +394,10 @@
             button.type = "button"
             button.classList.add("btn")
             button.classList.add("btn-primary")
-            button.dataset.toggle = "modal"
-            button.dataset.target = "#editModal"
             button.innerText = "เลือกสินค้า"
             button.addEventListener("click", async () => {
-                document.getElementById("saveBtn").hidden = false
-                document.getElementById("updateBtn").hidden = true
-                await loadProduct()
+                selectedItemRow = -1
+                modal.show(-1)
             })
             td.appendChild(button)
             tr.appendChild(td)

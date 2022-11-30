@@ -19,10 +19,14 @@
             </div>
             <div class="row">
                 <div class="col">
-                    <button id="addBtn" type="button" class="btn btn-primary" data-toggle="modal"
+                    <button id="addBtn" type="button" class="btn btn-primary"
                         data-target="#exampleModal">
                         เพิ่ม
                     </button>
+                </div>
+            </div><br>
+            <div class="row">
+                <div class="col">
                     <div id="table" class="center">
                     </div>
                 </div>
@@ -86,16 +90,18 @@
     <script type="module">
         import { getProducts, addProduct, RemoveProduct, updateProduct } from "./product.js"
         import { getUnitById, getUnits } from "./unit.js"
-        const units = await getUnits()
-        await loadtable()
+        const units = (await getUnits()).data
+        await loadtable() 
         setupUnits()
+        const exampleModal = document.getElementById('exampleModal')
         document.getElementById("addBtn").addEventListener("click", () => {
-            document.getElementById("unit").selectedIndex = -1
+            document.getElementById("unit").selectedIndex = 0
             document.getElementById("id").value = -1
             document.getElementById("product_Code").disabled = false;
             document.getElementById("product_Code").value = ""
             document.getElementById("product_Name").value = ""
             document.getElementById("product_Price").value = 0
+            $(exampleModal).modal('show')
         })
         document.getElementById("saveBtn").addEventListener("click", async () => {
             var id = document.getElementById("id").value
@@ -103,13 +109,23 @@
             var name = document.getElementById("product_Name").value
             var price = document.getElementById("product_Price").value
             var unitId = document.getElementById("unit").value
+            var res = ""
+            console.log(unitId)
             if (id >= 0) {
-                await updateProduct(id, code, name, price, unitId)
+                res = await updateProduct(id, code, name, price, unitId)
             } else {
-                await addProduct(code, name, price, unitId)
+                res = await addProduct(code, name, price, unitId)
             }
+            checkRes(res)
             await loadtable()
         })
+
+        function checkRes(res) {
+            if (res.statusCode === 1) {
+                alert(res.message)
+            }
+        }
+
 
         function setupUnits() {
             const dropdown = document.getElementById("unit")
@@ -124,16 +140,16 @@
         }
 
         async function loadtable() {
+            const result = (await getProducts()).data
             var table = document.getElementById("table")
             table.innerHTML = ""
-            var result = await getProducts()
             var html = "<table id='intable' class='table text-center border'>"
             html += "<tr><td>No</td><td>รหัสสินค้า</td><td>ชื่อสินค้า</td><td>หน่วย</td><td>ราคา</td><td>ดำเนินการ</td></tr>"
             html += "</table>"
             table.innerHTML = html
             for (var i = 0; i < result.length; i++) {
                 const unit = units.find((unit) => {
-                    return unit.uid == result[i].unitId
+                    return unit.Uid == result[i].UnitId
                 })
                 const id = result[i].pid
                 const code = result[i].productCode
@@ -154,10 +170,9 @@
                 editBtn.type = "button"
                 editBtn.classList.add("btn")
                 editBtn.classList.add("btn-primary")
-                editBtn.dataset.toggle = "modal"
-                editBtn.dataset.target = "#exampleModal"
                 editBtn.innerText = "แก้ไข"
                 editBtn.addEventListener("click", () => {
+                    $(exampleModal).modal('show')
                     edit(id, code, name, price, unitId)
                 })
                 tr.querySelector(".button").appendChild(editBtn)
@@ -168,7 +183,6 @@
                 removeBtn.innerText = "ลบ"
                 removeBtn.addEventListener("click", async () => {
                     await removeUnit(id)
-                    loadtable()
                 })
                 tr.querySelector(".button").appendChild(removeBtn)
                 document.getElementById("intable").appendChild(tr)
@@ -188,7 +202,8 @@
         }
 
         async function removeUnit(id) {
-            await RemoveProduct(id)
+            var res = await RemoveProduct(id)
+            checkRes(res)
             await loadtable()
         }
     </script>
